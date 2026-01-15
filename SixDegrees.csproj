@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IsPublishable>True</IsPublishable>
+    <ErrorReport>none</ErrorReport>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyInformationalVersion>1.0.0.0</AssemblyInformationalVersion>
+    <ProductVersion>1.0.0.0</ProductVersion>
+    <AssemblyName>SixDegrees</AssemblyName>
+    <RootNamespace>SixDegrees</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="thumb.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="thumb.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediaBrowser.Server.Core" Version="4.9.1.90" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy $(TargetPath) %AppData%\Emby-Server\programdata\plugins\" />
+  </Target>
+
+</Project>

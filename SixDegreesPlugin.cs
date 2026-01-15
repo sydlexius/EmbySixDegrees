@@ -1,0 +1,109 @@
+// <copyright file="SixDegreesPlugin.cs" company="Six Degrees">
+// Copyright © 2026 - Six Degrees Contributors. All rights reserved.
+// </copyright>
+
+namespace SixDegrees
+{
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using MediaBrowser.Common.Plugins;
+    using MediaBrowser.Controller;
+    using MediaBrowser.Controller.Library;
+    using MediaBrowser.Model.Drawing;
+    using MediaBrowser.Model.Logging;
+    using MediaBrowser.Model.Plugins;
+    using MediaBrowser.Model.Serialization;
+    using SixDegrees.Configuration;
+    using SixDegrees.Services;
+
+    /// <summary>
+    /// The Six Degrees of Separation Plugin for Emby.
+    /// </summary>
+    public class SixDegreesPlugin : BasePlugin<PluginConfiguration>, IHasThumbImage
+    {
+        private readonly IServerApplicationHost applicationHost;
+        private readonly ILibraryManager libraryManager;
+        private readonly ILogger logger;
+        private readonly IJsonSerializer jsonSerializer;
+
+        /// <summary>
+        /// The Plugin ID.
+        /// </summary>
+        private readonly Guid id = new Guid("6D6D6D6D-5D5D-4D4D-3D3D-2D2D2D2D2D2D");
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SixDegreesPlugin" /> class.
+        /// </summary>
+        /// <param name="applicationHost">The application host.</param>
+        /// <param name="libraryManager">The library manager.</param>
+        /// <param name="logManager">The log manager.</param>
+        /// <param name="jsonSerializer">The JSON serializer.</param>
+        public SixDegreesPlugin(
+            IServerApplicationHost applicationHost,
+            ILibraryManager libraryManager,
+            ILogManager logManager,
+            IJsonSerializer jsonSerializer)
+            : base(applicationHost, logManager, jsonSerializer)
+        {
+            this.applicationHost = applicationHost;
+            this.libraryManager = libraryManager;
+            this.logger = logManager.GetLogger(this.Name);
+            this.jsonSerializer = jsonSerializer;
+
+            Instance = this;
+
+            this.logger.Info("Six Degrees Plugin initialized");
+        }
+
+        /// <summary>
+        /// Gets the plugin instance.
+        /// </summary>
+        public static SixDegreesPlugin Instance { get; private set; }
+
+        /// <summary>
+        /// Gets the description.
+        /// </summary>
+        public override string Description => "Interactive force-directed graph showing relationship connections between people across all media in your library.";
+
+        /// <summary>
+        /// Gets the unique id.
+        /// </summary>
+        public override Guid Id => this.id;
+
+        /// <summary>
+        /// Gets the name of the plugin.
+        /// </summary>
+        public override string Name => "Six Degrees of Separation";
+
+        /// <summary>
+        /// Gets the thumb image format.
+        /// </summary>
+        public ImageFormat ThumbImageFormat => ImageFormat.Jpg;
+
+        /// <summary>
+        /// Gets the library manager.
+        /// </summary>
+        public ILibraryManager LibraryManager => this.libraryManager;
+
+        /// <summary>
+        /// Gets the logger.
+        /// </summary>
+        public ILogger Logger => this.logger;
+
+        /// <summary>
+        /// Gets the JSON serializer.
+        /// </summary>
+        public IJsonSerializer JsonSerializer => this.jsonSerializer;
+
+        /// <summary>
+        /// Gets the thumb image.
+        /// </summary>
+        /// <returns>An image stream.</returns>
+        public Stream GetThumbImage()
+        {
+            var type = this.GetType();
+            return type.Assembly.GetManifestResourceStream(type.Namespace + ".thumb.jpg");
+        }
+    }
+}
