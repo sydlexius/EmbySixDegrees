@@ -42,9 +42,9 @@ An interactive force-directed graph visualization plugin for Emby that shows rel
 ## Development
 
 ### Prerequisites
-- Visual Studio 2019 or later
-- .NET Standard 2.0
-- Emby Server Beta SDK
+- Visual Studio Code or Visual Studio 2019+
+- .NET SDK 6.0+ (targets netstandard2.0)
+- Emby Server Beta
 
 ### Building
 ```bash

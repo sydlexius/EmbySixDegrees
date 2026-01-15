@@ -1,0 +1,40 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit hooks..."
+
+# C# Syntax Validation and Formatting
+echo "📝 Validating C# code..."
+dotnet format --verify-no-changes --verbosity quiet
+if [ $? -ne 0 ]; then
+  echo "❌ C# formatting issues detected. Run 'dotnet format' to fix."
+  exit 1
+fi
+
+# C# Build Check
+echo "🔨 Building C# project..."
+dotnet build --no-restore --verbosity quiet
+if [ $? -ne 0 ]; then
+  echo "❌ C# build failed. Fix compilation errors before committing."
+  exit 1
+fi
+
+# JavaScript/HTML Linting (if frontend files exist)
+if [ -d "wwwroot" ]; then
+  echo "✨ Linting JavaScript..."
+  npx eslint wwwroot/js/**/*.js --quiet
+  if [ $? -ne 0 ]; then
+    echo "❌ JavaScript linting failed. Fix errors before committing."
+    exit 1
+  fi
+fi
+
+# Run Unit Tests
+echo "🧪 Running unit tests..."
+dotnet test --no-build --verbosity quiet
+if [ $? -ne 0 ]; then
+  echo "❌ Unit tests failed. Fix tests before committing."
+  exit 1
+fi
+
+echo "✅ All pre-commit checks passed!"

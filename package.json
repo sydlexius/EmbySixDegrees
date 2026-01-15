@@ -1,0 +1,34 @@
+{
+  "name": "emby-six-degrees",
+  "version": "0.1.0",
+  "description": "Six Degrees of Separation plugin for Emby",
+  "scripts": {
+    "prepare": "husky install",
+    "lint": "eslint wwwroot/js/**/*.js",
+    "lint:fix": "eslint wwwroot/js/**/*.js --fix",
+    "format": "prettier --write \"wwwroot/**/*.{js,html,css}\"",
+    "test": "echo \"No JS tests yet\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sydlexius/EmbySixDegrees.git"
+  },
+  "keywords": [
+    "emby",
+    "plugin",
+    "visualization",
+    "graph",
+    "six-degrees"
+  ],
+  "author": "sydlexius",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "husky": "^8.0.3",
+    "prettier": "^3.2.4"
+  }
+}

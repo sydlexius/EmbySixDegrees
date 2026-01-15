@@ -4,10 +4,11 @@ This guide will help you set up the development environment and start working on
 
 ## Prerequisites
 
-1. **Visual Studio 2019 or later** (or Visual Studio Code with C# extension)
-2. **.NET Standard 2.0 SDK**
+1. **Visual Studio Code** (recommended) or Visual Studio 2019+
+   - Install C# Dev Kit extension for VSCode
+2. **.NET SDK** (6.0 or later - targets netstandard2.0)
 3. **Emby Server Beta** installed locally
-4. **Emby Beta SDK** (referenced in project)
+4. **Emby Beta SDK** (referenced in project via NuGet)
 
 ## Project Structure
 
