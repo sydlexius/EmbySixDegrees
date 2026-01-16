@@ -7,6 +7,7 @@ namespace SixDegrees
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using MediaBrowser.Common.Configuration;
     using MediaBrowser.Common.Plugins;
     using MediaBrowser.Controller;
     using MediaBrowser.Controller.Library;
@@ -15,12 +16,11 @@ namespace SixDegrees
     using MediaBrowser.Model.Plugins;
     using MediaBrowser.Model.Serialization;
     using SixDegrees.Configuration;
-    using SixDegrees.Services;
 
     /// <summary>
     /// The Six Degrees of Separation Plugin for Emby.
     /// </summary>
-    public class SixDegreesPlugin : BasePlugin<PluginConfiguration>, IHasThumbImage
+    public class SixDegreesPlugin : BasePlugin<PluginConfiguration>, IHasThumbImage, IHasWebPages
     {
         private readonly IServerApplicationHost applicationHost;
         private readonly ILibraryManager libraryManager;
@@ -35,16 +35,20 @@ namespace SixDegrees
         /// <summary>
         /// Initializes a new instance of the <see cref="SixDegreesPlugin" /> class.
         /// </summary>
+        /// <param name="applicationPaths">The application paths.</param>
+        /// <param name="xmlSerializer">The XML serializer.</param>
         /// <param name="applicationHost">The application host.</param>
         /// <param name="libraryManager">The library manager.</param>
         /// <param name="logManager">The log manager.</param>
         /// <param name="jsonSerializer">The JSON serializer.</param>
         public SixDegreesPlugin(
+            IApplicationPaths applicationPaths,
+            IXmlSerializer xmlSerializer,
             IServerApplicationHost applicationHost,
             ILibraryManager libraryManager,
             ILogManager logManager,
             IJsonSerializer jsonSerializer)
-            : base(applicationHost, logManager, jsonSerializer)
+            : base(applicationPaths, xmlSerializer)
         {
             this.applicationHost = applicationHost;
             this.libraryManager = libraryManager;
@@ -77,11 +81,6 @@ namespace SixDegrees
         public override string Name => "Six Degrees of Separation";
 
         /// <summary>
-        /// Gets the thumb image format.
-        /// </summary>
-        public ImageFormat ThumbImageFormat => ImageFormat.Jpg;
-
-        /// <summary>
         /// Gets the library manager.
         /// </summary>
         public ILibraryManager LibraryManager => this.libraryManager;
@@ -97,13 +96,40 @@ namespace SixDegrees
         public IJsonSerializer JsonSerializer => this.jsonSerializer;
 
         /// <summary>
+        /// Gets the thumb image format.
+        /// </summary>
+        public ImageFormat ThumbImageFormat => ImageFormat.Png;
+
+        /// <summary>
         /// Gets the thumb image.
         /// </summary>
         /// <returns>An image stream.</returns>
         public Stream GetThumbImage()
         {
             var type = this.GetType();
-            return type.Assembly.GetManifestResourceStream(type.Namespace + ".thumb.jpg");
+            return type.Assembly.GetManifestResourceStream(type.Namespace + ".thumb.png");
+        }
+
+        /// <summary>
+        /// Gets the plugin pages.
+        /// </summary>
+        /// <returns>An enumerable collection of plugin page information.</returns>
+        public IEnumerable<PluginPageInfo> GetPages()
+        {
+            return new[]
+            {
+                new PluginPageInfo
+                {
+                    Name = "sixdegrees",
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.sixdegrees.html",
+                    EnableInMainMenu = true
+                },
+                new PluginPageInfo
+                {
+                    Name = "sixdegrees.js",
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.sixdegrees.js"
+                }
+            };
         }
     }
 }

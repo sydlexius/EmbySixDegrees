@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh issue view:*)",
+      "Bash(dotnet restore:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet clean:*)",
+      "Bash(dotnet add:*)",
+      "Bash(dotnet list:*)",
+      "Bash(ls:*)",
+      "Bash(dotnet:*)",
+      "Bash(gh issue comment:*)"
+    ]
+  }
+}

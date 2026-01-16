@@ -9,22 +9,24 @@
     <ProductVersion>1.0.0.0</ProductVersion>
     <AssemblyName>SixDegrees</AssemblyName>
     <RootNamespace>SixDegrees</RootNamespace>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="thumb.jpg" />
+    <None Remove="thumb.png" />
+    <None Remove="Configuration\sixdegrees.html" />
+    <None Remove="Configuration\sixdegrees.js" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="thumb.jpg" />
+    <EmbeddedResource Include="thumb.png" />
+    <EmbeddedResource Include="Configuration\sixdegrees.html" />
+    <EmbeddedResource Include="Configuration\sixdegrees.js" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MediaBrowser.Server.Core" Version="4.9.1.90" />
+    <PackageReference Include="System.Memory" Version="4.6.0-preview3.19551.4" />
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy $(TargetPath) %AppData%\Emby-Server\programdata\plugins\" />
-  </Target>
 
 </Project>
