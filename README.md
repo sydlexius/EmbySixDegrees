@@ -45,10 +45,46 @@ An interactive force-directed graph visualization plugin for Emby that shows rel
 - Visual Studio Code or Visual Studio 2019+
 - .NET SDK 6.0+ (targets netstandard2.0)
 - Emby Server Beta
+- Node.js (for pre-commit hooks)
+
+### Setup
+1. Install dependencies:
+```bash
+npm install
+```
+
+This will automatically set up Git pre-commit hooks via Husky.
 
 ### Building
 ```bash
 dotnet build
+```
+
+### Pre-Commit Hooks
+This project uses Git pre-commit hooks to maintain code quality. The hooks run automatically on every commit and check:
+
+1. **C# Formatting** - Validates code formatting with `dotnet format`
+2. **C# Build** - Ensures the project compiles without errors
+3. **JavaScript Linting** - Checks JavaScript code with ESLint
+4. **Unit Tests** - Runs all tests to ensure they pass
+
+If any check fails, the commit will be blocked. Fix the issues and try again.
+
+**Bypassing hooks** (use sparingly):
+```bash
+git commit --no-verify -m "Your message"
+```
+
+**Manually run checks**:
+```bash
+# Format C# code
+dotnet format 6degrees.sln
+
+# Lint JavaScript
+npm run lint
+
+# Fix JavaScript issues automatically
+npm run lint:fix
 ```
 
 ### Testing
