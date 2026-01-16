@@ -1,4 +1,4 @@
-# Six Degrees of Separation - Emby Plugin
+# SixDegrees - Emby Plugin
 
 An interactive force-directed graph visualization plugin for Emby that shows relationship connections between people (actors, directors, writers, producers, etc.) across all media in your library.
 
@@ -52,7 +52,7 @@ dotnet build
 ```
 
 ### Testing
-Connect to your Emby Server and navigate to the "Six Degrees" page in the main menu.
+Connect to your Emby Server and navigate to the "SixDegrees" page in the main menu.
 
 ## API Endpoints
 

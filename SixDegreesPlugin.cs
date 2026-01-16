@@ -78,7 +78,7 @@ namespace SixDegrees
         /// <summary>
         /// Gets the name of the plugin.
         /// </summary>
-        public override string Name => "Six Degrees of Separation";
+        public override string Name => "SixDegrees";
 
         /// <summary>
         /// Gets the library manager.

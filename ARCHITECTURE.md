@@ -2,7 +2,7 @@
 
 ## System Overview
 
-The Six Degrees of Separation plugin consists of three main layers:
+The SixDegrees plugin consists of three main layers:
 
 1. **Data Collection Layer**: Scans the Emby library to build a relationship graph
 2. **API Layer**: Exposes REST endpoints for querying relationship data

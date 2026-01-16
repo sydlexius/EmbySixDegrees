@@ -1,6 +1,6 @@
 # Getting Started with Development
 
-This guide will help you set up the development environment and start working on the Six Degrees plugin.
+This guide will help you set up the development environment and start working on the SixDegrees plugin.
 
 ## Prerequisites
 

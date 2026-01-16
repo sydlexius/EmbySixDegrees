@@ -1,7 +1,7 @@
 {
   "name": "emby-six-degrees",
   "version": "0.1.0",
-  "description": "Six Degrees of Separation plugin for Emby",
+  "description": "SixDegrees plugin for Emby",
   "scripts": {
     "prepare": "husky install",
     "lint": "eslint wwwroot/js/**/*.js",
