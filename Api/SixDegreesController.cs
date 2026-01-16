@@ -6,9 +6,11 @@ namespace SixDegrees.Api
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using MediaBrowser.Model.Logging;
     using MediaBrowser.Model.Services;
     using SixDegrees.Models;
+    using SixDegrees.Services;
 
     /// <summary>
     /// API controller for Six Degrees plugin endpoints.
@@ -16,14 +18,20 @@ namespace SixDegrees.Api
     public class SixDegreesController : IService
     {
         private readonly ILogger logger;
+        private readonly RelationshipGraph graph;
+        private readonly PathfindingService pathfindingService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SixDegreesController"/> class.
         /// </summary>
         /// <param name="logger">The logger instance.</param>
-        public SixDegreesController(ILogger logger)
+        /// <param name="graph">The relationship graph.</param>
+        /// <param name="pathfindingService">The pathfinding service.</param>
+        public SixDegreesController(ILogger logger, RelationshipGraph graph, PathfindingService pathfindingService)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.graph = graph ?? throw new ArgumentNullException(nameof(graph));
+            this.pathfindingService = pathfindingService ?? throw new ArgumentNullException(nameof(pathfindingService));
         }
 
         /// <summary>
@@ -34,15 +42,7 @@ namespace SixDegrees.Api
         public object Get(GetStatisticsRequest request)
         {
             this.logger.Info("GetStatistics endpoint called");
-
-            // TODO: Get from actual graph service once integrated
-            return new
-            {
-                PeopleCount = 0,
-                MediaCount = 0,
-                ConnectionCount = 0,
-                LastBuildTime = DateTime.MinValue
-            };
+            return this.graph.GetStatistics();
         }
 
         /// <summary>
@@ -53,14 +53,7 @@ namespace SixDegrees.Api
         public object Get(FindPathRequest request)
         {
             this.logger.Info($"FindPath endpoint called: {request.FromPersonId} -> {request.ToPersonId}");
-
-            // TODO: Implement BFS pathfinding algorithm
-            return new
-            {
-                Success = false,
-                Message = "Pathfinding not yet implemented",
-                Path = new List<object>()
-            };
+            return this.pathfindingService.FindShortestPath(request.FromPersonId, request.ToPersonId, request.MaxDepth);
         }
 
         /// <summary>
@@ -70,14 +63,63 @@ namespace SixDegrees.Api
         /// <returns>The neighbors result.</returns>
         public object Get(GetNeighborsRequest request)
         {
-            this.logger.Info($"GetNeighbors endpoint called: {request.PersonId}, Degree: {request.Degree}");
+            this.logger.Info($"GetNeighbors endpoint called: {request.PersonId}, Degree: {request.Degree}, MaxNodes: {request.MaxNodes}");
+            return this.pathfindingService.GetNeighbors(request.PersonId, request.Degree, request.MaxNodes);
+        }
 
-            // TODO: Implement N-degree expansion algorithm
+        /// <summary>
+        /// Searches for people by name.
+        /// </summary>
+        /// <param name="request">The search request.</param>
+        /// <returns>Search results with pagination.</returns>
+        public object Get(SearchPeopleRequest request)
+        {
+            this.logger.Info($"SearchPeople endpoint called: Query='{request.Query}', Limit={request.Limit}, Offset={request.Offset}");
+
+            var results = this.graph.SearchPeople(request.Query, request.Limit, request.Offset);
+            var resultList = results.ToList();
+
             return new
             {
-                PersonId = request.PersonId,
-                Degree = request.Degree,
-                Neighbors = new List<object>()
+                Query = request.Query,
+                Limit = request.Limit,
+                Offset = request.Offset,
+                Count = resultList.Count,
+                Results = resultList.Select(p => new
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    ImageUrl = p.ImageUrl,
+                    ConnectionCount = p.MediaConnections.Count
+                })
+            };
+        }
+
+        /// <summary>
+        /// Gets all people with pagination.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <returns>Paginated list of people.</returns>
+        public object Get(GetPeopleRequest request)
+        {
+            this.logger.Info($"GetPeople endpoint called: Limit={request.Limit}, Offset={request.Offset}");
+
+            var results = this.graph.GetAllPeople(request.Limit, request.Offset);
+            var resultList = results.ToList();
+
+            return new
+            {
+                Limit = request.Limit,
+                Offset = request.Offset,
+                Count = resultList.Count,
+                TotalCount = this.graph.PeopleCount,
+                Results = resultList.Select(p => new
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    ImageUrl = p.ImageUrl,
+                    ConnectionCount = p.MediaConnections.Count
+                })
             };
         }
 
@@ -122,6 +164,11 @@ namespace SixDegrees.Api
         /// Gets or sets the target person ID.
         /// </summary>
         public string ToPersonId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the maximum search depth (default: 6).
+        /// </summary>
+        public int MaxDepth { get; set; } = 6;
     }
 
     /// <summary>
@@ -139,6 +186,50 @@ namespace SixDegrees.Api
         /// Gets or sets the degree (1-6).
         /// </summary>
         public int Degree { get; set; } = 2;
+
+        /// <summary>
+        /// Gets or sets the maximum number of nodes to return (default: 500, max: 1000).
+        /// </summary>
+        public int MaxNodes { get; set; } = 500;
+    }
+
+    /// <summary>
+    /// Request for searching people.
+    /// </summary>
+    [Route("/SixDegrees/Search", "GET")]
+    public class SearchPeopleRequest : IReturn<object>
+    {
+        /// <summary>
+        /// Gets or sets the search query.
+        /// </summary>
+        public string Query { get; set; }
+
+        /// <summary>
+        /// Gets or sets the maximum number of results (default: 20, max: 100).
+        /// </summary>
+        public int Limit { get; set; } = 20;
+
+        /// <summary>
+        /// Gets or sets the number of results to skip (default: 0).
+        /// </summary>
+        public int Offset { get; set; } = 0;
+    }
+
+    /// <summary>
+    /// Request for getting all people.
+    /// </summary>
+    [Route("/SixDegrees/People", "GET")]
+    public class GetPeopleRequest : IReturn<object>
+    {
+        /// <summary>
+        /// Gets or sets the maximum number of results (default: 50, max: 200).
+        /// </summary>
+        public int Limit { get; set; } = 50;
+
+        /// <summary>
+        /// Gets or sets the number of results to skip (default: 0).
+        /// </summary>
+        public int Offset { get; set; } = 0;
     }
 
     /// <summary>

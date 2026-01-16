@@ -9,7 +9,10 @@
       "Bash(dotnet list:*)",
       "Bash(ls:*)",
       "Bash(dotnet:*)",
-      "Bash(gh issue comment:*)"
+      "Bash(gh issue comment:*)",
+      "Bash(git commit:*)",
+      "Bash(gh issue reopen:*)",
+      "Bash(gh issue close:*)"
     ]
   }
 }

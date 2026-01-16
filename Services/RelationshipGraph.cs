@@ -19,16 +19,20 @@ namespace SixDegrees.Services
         private readonly Dictionary<string, PersonNode> people;
         private readonly Dictionary<string, MediaNode> media;
         private readonly object lockObject = new object();
+        private int cachedConnectionCount;
+        private bool connectionCountDirty = true;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RelationshipGraph"/> class.
         /// </summary>
         /// <param name="logger">The logger instance.</param>
-        public RelationshipGraph(ILogger logger)
+        /// <param name="estimatedPeopleCapacity">Estimated capacity for people dictionary (default: 5000).</param>
+        /// <param name="estimatedMediaCapacity">Estimated capacity for media dictionary (default: 10000).</param>
+        public RelationshipGraph(ILogger logger, int estimatedPeopleCapacity = 5000, int estimatedMediaCapacity = 10000)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.people = new Dictionary<string, PersonNode>();
-            this.media = new Dictionary<string, MediaNode>();
+            this.people = new Dictionary<string, PersonNode>(estimatedPeopleCapacity);
+            this.media = new Dictionary<string, MediaNode>(estimatedMediaCapacity);
         }
 
         /// <summary>
@@ -48,7 +52,16 @@ namespace SixDegrees.Services
         {
             get
             {
-                return this.people.Values.Sum(p => p.MediaConnections.Count);
+                lock (this.lockObject)
+                {
+                    if (this.connectionCountDirty)
+                    {
+                        this.cachedConnectionCount = this.people.Values.Sum(p => p.MediaConnections.Count);
+                        this.connectionCountDirty = false;
+                    }
+
+                    return this.cachedConnectionCount;
+                }
             }
         }
 
@@ -148,6 +161,7 @@ namespace SixDegrees.Services
                         Year = mediaItem.Year,
                         ImageUrl = mediaItem.ImageUrl
                     };
+                    this.connectionCountDirty = true;
                 }
 
                 // Add connection from media to person
@@ -233,6 +247,8 @@ namespace SixDegrees.Services
             {
                 this.people.Clear();
                 this.media.Clear();
+                this.connectionCountDirty = true;
+                this.cachedConnectionCount = 0;
                 this.logger.Info("Graph cleared");
             }
         }
@@ -252,6 +268,57 @@ namespace SixDegrees.Services
                     { "connectionCount", this.ConnectionCount },
                     { "averageConnectionsPerPerson", this.PeopleCount > 0 ? (double)this.ConnectionCount / this.PeopleCount : 0 }
                 };
+            }
+        }
+
+        /// <summary>
+        /// Searches for people by name with pagination support.
+        /// </summary>
+        /// <param name="query">The search query.</param>
+        /// <param name="limit">Maximum number of results to return (default: 20, max: 100).</param>
+        /// <param name="offset">Number of results to skip (default: 0).</param>
+        /// <returns>A paginated list of matching people.</returns>
+        public IEnumerable<PersonNode> SearchPeople(string query, int limit = 20, int offset = 0)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return Enumerable.Empty<PersonNode>();
+            }
+
+            // Enforce max limit for performance
+            limit = Math.Min(limit, 100);
+            offset = Math.Max(offset, 0);
+
+            lock (this.lockObject)
+            {
+                return this.people.Values
+                    .Where(p => p.Name.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
+                    .OrderBy(p => p.Name)
+                    .Skip(offset)
+                    .Take(limit)
+                    .ToList();
+            }
+        }
+
+        /// <summary>
+        /// Gets all people in the graph with pagination support.
+        /// </summary>
+        /// <param name="limit">Maximum number of results to return (default: 50, max: 200).</param>
+        /// <param name="offset">Number of results to skip (default: 0).</param>
+        /// <returns>A paginated list of people.</returns>
+        public IEnumerable<PersonNode> GetAllPeople(int limit = 50, int offset = 0)
+        {
+            // Enforce max limit for performance
+            limit = Math.Min(limit, 200);
+            offset = Math.Max(offset, 0);
+
+            lock (this.lockObject)
+            {
+                return this.people.Values
+                    .OrderBy(p => p.Name)
+                    .Skip(offset)
+                    .Take(limit)
+                    .ToList();
             }
         }
     }
