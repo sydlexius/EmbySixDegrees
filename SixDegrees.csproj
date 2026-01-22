@@ -19,6 +19,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Exclude development utility files from compilation -->
+    <Compile Remove="InspectApi.cs" />
+    <Compile Remove="inspect_dll.csx" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="thumb.png" />
     <EmbeddedResource Include="Configuration\sixdegrees.html" />
     <EmbeddedResource Include="Configuration\sixdegrees.js" />

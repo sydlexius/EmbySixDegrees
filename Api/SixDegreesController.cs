@@ -20,18 +20,18 @@ namespace SixDegrees.Api
         private readonly ILogger logger;
         private readonly RelationshipGraph graph;
         private readonly PathfindingService pathfindingService;
+        private readonly RelationshipGraphService graphService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SixDegreesController"/> class.
         /// </summary>
-        /// <param name="logger">The logger instance.</param>
-        /// <param name="graph">The relationship graph.</param>
-        /// <param name="pathfindingService">The pathfinding service.</param>
-        public SixDegreesController(ILogger logger, RelationshipGraph graph, PathfindingService pathfindingService)
+        public SixDegreesController()
         {
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.graph = graph ?? throw new ArgumentNullException(nameof(graph));
-            this.pathfindingService = pathfindingService ?? throw new ArgumentNullException(nameof(pathfindingService));
+            var plugin = SixDegreesPlugin.Instance;
+            this.logger = plugin.Logger;
+            this.graph = plugin.RelationshipGraph;
+            this.pathfindingService = plugin.PathfindingService;
+            this.graphService = plugin.GraphService;
         }
 
         /// <summary>
@@ -132,12 +132,28 @@ namespace SixDegrees.Api
         {
             this.logger.Info("RebuildGraph endpoint called");
 
-            // TODO: Implement graph rebuild logic
-            return new
+            try
             {
-                Success = false,
-                Message = "Graph rebuild not yet implemented"
-            };
+                var result = this.graphService.BuildGraph();
+                return new
+                {
+                    Success = result.Success,
+                    Message = result.Message,
+                    PeopleCount = result.PeopleCount,
+                    MediaCount = result.MediaCount,
+                    ConnectionCount = result.ConnectionCount,
+                    BuildTimeMs = result.BuildTimeMs
+                };
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error($"Error rebuilding graph: {ex.Message}", ex);
+                return new
+                {
+                    Success = false,
+                    Message = $"Error rebuilding graph: {ex.Message}"
+                };
+            }
         }
     }
 

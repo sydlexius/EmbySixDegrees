@@ -26,6 +26,9 @@ namespace SixDegrees
         private readonly ILibraryManager libraryManager;
         private readonly ILogger logger;
         private readonly IJsonSerializer jsonSerializer;
+        private readonly Services.RelationshipGraph relationshipGraph;
+        private readonly Services.PathfindingService pathfindingService;
+        private readonly Services.RelationshipGraphService graphService;
 
         /// <summary>
         /// The Plugin ID.
@@ -56,6 +59,27 @@ namespace SixDegrees
             this.jsonSerializer = jsonSerializer;
 
             Instance = this;
+
+            // Initialize services
+            this.relationshipGraph = new Services.RelationshipGraph(this.logger);
+            this.pathfindingService = new Services.PathfindingService(this.logger, this.relationshipGraph);
+
+            // Get data path for cache storage
+            var dataPath = Path.Combine(applicationPaths.PluginConfigurationsPath, "SixDegrees");
+            this.graphService = new Services.RelationshipGraphService(
+                this.libraryManager,
+                this.logger,
+                this.jsonSerializer,
+                this.relationshipGraph,
+                () => this.Configuration,
+                dataPath);
+
+            // Load cache on startup
+            this.logger.Info("Loading graph cache on startup...");
+            if (!this.graphService.LoadCache())
+            {
+                this.logger.Info("Cache load failed or not found. Graph will need to be built.");
+            }
 
             this.logger.Info("Six Degrees Plugin initialized");
         }
@@ -94,6 +118,21 @@ namespace SixDegrees
         /// Gets the JSON serializer.
         /// </summary>
         public IJsonSerializer JsonSerializer => this.jsonSerializer;
+
+        /// <summary>
+        /// Gets the relationship graph.
+        /// </summary>
+        public Services.RelationshipGraph RelationshipGraph => this.relationshipGraph;
+
+        /// <summary>
+        /// Gets the pathfinding service.
+        /// </summary>
+        public Services.PathfindingService PathfindingService => this.pathfindingService;
+
+        /// <summary>
+        /// Gets the graph service.
+        /// </summary>
+        public Services.RelationshipGraphService GraphService => this.graphService;
 
         /// <summary>
         /// Gets the thumb image format.
