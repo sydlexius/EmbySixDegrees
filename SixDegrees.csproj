@@ -22,6 +22,10 @@
     <!-- Exclude development utility files from compilation -->
     <Compile Remove="InspectApi.cs" />
     <Compile Remove="inspect_dll.csx" />
+    <!-- Exclude test project folder -->
+    <Compile Remove="SixDegrees.Tests\**" />
+    <None Remove="SixDegrees.Tests\**" />
+    <EmbeddedResource Remove="SixDegrees.Tests\**" />
   </ItemGroup>
 
   <ItemGroup>

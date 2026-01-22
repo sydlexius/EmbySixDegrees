@@ -22,7 +22,6 @@ bld/
 *.sln.docstates
 
 # Visual Studio
-*.sln
 *.csproj.user
 
 # ReSharper

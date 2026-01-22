@@ -66,10 +66,10 @@ namespace SixDegrees.Services
 
             try
             {
-                var path = this.BreadthFirstSearch(startPersonId, targetPersonId, maxDepth);
+                var (path, nodesVisited) = this.BreadthFirstSearch(startPersonId, targetPersonId, maxDepth);
 
                 var elapsedMs = (DateTime.UtcNow - startTime).TotalMilliseconds;
-                this.logger.Info($"Path search completed in {elapsedMs}ms");
+                this.logger.Info($"Path search completed in {elapsedMs}ms, visited {nodesVisited} nodes");
 
                 if (path == null)
                 {
@@ -77,7 +77,8 @@ namespace SixDegrees.Services
                     {
                         Success = false,
                         Message = $"No path found within {maxDepth} degrees",
-                        SearchTimeMs = elapsedMs
+                        SearchTimeMs = elapsedMs,
+                        NodesVisited = nodesVisited
                     };
                 }
 
@@ -85,8 +86,9 @@ namespace SixDegrees.Services
                 {
                     Success = true,
                     Path = path,
-                    Degrees = (path.Count - 1) / 2, // Subtract 1 for start person, divide by 2 (person-media-person)
-                    SearchTimeMs = elapsedMs
+                    Degrees = path.Count - 1, // Number of edges in the path (Person->Media->Person = 2 degrees)
+                    SearchTimeMs = elapsedMs,
+                    NodesVisited = nodesVisited
                 };
             }
             catch (Exception ex)
@@ -106,8 +108,8 @@ namespace SixDegrees.Services
         /// <param name="startPersonId">The starting person ID.</param>
         /// <param name="targetPersonId">The target person ID.</param>
         /// <param name="maxDepth">Maximum search depth.</param>
-        /// <returns>A list of path nodes, or null if no path found.</returns>
-        private List<PathNode> BreadthFirstSearch(string startPersonId, string targetPersonId, int maxDepth)
+        /// <returns>A tuple containing the path nodes (or null if no path found) and the number of nodes visited.</returns>
+        private (List<PathNode> Path, int NodesVisited) BreadthFirstSearch(string startPersonId, string targetPersonId, int maxDepth)
         {
             var queue = new Queue<(string PersonId, int Depth)>();
             var visited = new HashSet<string>();
@@ -123,7 +125,7 @@ namespace SixDegrees.Services
                 // Check if we've reached the target
                 if (currentPersonId == targetPersonId)
                 {
-                    return this.ReconstructPath(parent, startPersonId, targetPersonId);
+                    return (this.ReconstructPath(parent, startPersonId, targetPersonId), visited.Count);
                 }
 
                 // Stop if we've exceeded max depth
@@ -170,7 +172,7 @@ namespace SixDegrees.Services
                 }
             }
 
-            return null; // No path found
+            return (null, visited.Count); // No path found
         }
 
         /// <summary>
@@ -259,10 +261,10 @@ namespace SixDegrees.Services
 
             try
             {
-                var (nodes, edges) = this.BreadthFirstExpansion(personId, degree, maxNodes);
+                var (nodes, edges, nodesVisited) = this.BreadthFirstExpansion(personId, degree, maxNodes);
 
                 var elapsedMs = (DateTime.UtcNow - startTime).TotalMilliseconds;
-                this.logger.Info($"Neighbor expansion completed in {elapsedMs}ms: {nodes.Count} nodes, {edges.Count} edges");
+                this.logger.Info($"Neighbor expansion completed in {elapsedMs}ms: {nodes.Count} nodes, {edges.Count} edges, visited {nodesVisited} nodes");
 
                 return new NeighborsResult
                 {
@@ -272,7 +274,8 @@ namespace SixDegrees.Services
                     Nodes = nodes,
                     Edges = edges,
                     Truncated = nodes.Count >= maxNodes,
-                    SearchTimeMs = elapsedMs
+                    SearchTimeMs = elapsedMs,
+                    NodesVisited = nodesVisited
                 };
             }
             catch (Exception ex)
@@ -292,8 +295,8 @@ namespace SixDegrees.Services
         /// <param name="startPersonId">The starting person ID.</param>
         /// <param name="maxDegree">Maximum degree of separation.</param>
         /// <param name="maxNodes">Maximum number of nodes to return.</param>
-        /// <returns>A tuple containing nodes and edges.</returns>
-        private (List<GraphNode> Nodes, List<GraphEdge> Edges) BreadthFirstExpansion(
+        /// <returns>A tuple containing nodes, edges, and nodes visited count.</returns>
+        private (List<GraphNode> Nodes, List<GraphEdge> Edges, int NodesVisited) BreadthFirstExpansion(
             string startPersonId,
             int maxDegree,
             int maxNodes)
@@ -410,7 +413,7 @@ namespace SixDegrees.Services
                 }
             }
 
-            return (nodes, edges);
+            return (nodes, edges, visitedPeople.Count + visitedMedia.Count);
         }
     }
 
@@ -446,6 +449,8 @@ namespace SixDegrees.Services
         public int Degrees { get; set; }
 
         public double SearchTimeMs { get; set; }
+
+        public int NodesVisited { get; set; }
     }
 
     /// <summary>
@@ -486,6 +491,8 @@ namespace SixDegrees.Services
         public bool Truncated { get; set; }
 
         public double SearchTimeMs { get; set; }
+
+        public int NodesVisited { get; set; }
     }
 
     /// <summary>
