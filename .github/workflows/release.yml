@@ -1,0 +1,63 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Matches semantic version tags (v1.0.0, v1.2.3, etc.)
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Extract version from tag
+      id: version
+      run: |
+        TAG=${GITHUB_REF#refs/tags/v}
+        echo "VERSION=$TAG" >> $GITHUB_OUTPUT
+        echo "Building version: $TAG"
+
+    - name: Update project version
+      run: |
+        VERSION="${{ steps.version.outputs.VERSION }}"
+        sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$VERSION<\/AssemblyVersion>/" SixDegrees.csproj
+        sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>$VERSION<\/FileVersion>/" SixDegrees.csproj
+        sed -i "s/<AssemblyInformationalVersion>.*<\/AssemblyInformationalVersion>/<AssemblyInformationalVersion>$VERSION<\/AssemblyInformationalVersion>/" SixDegrees.csproj
+        sed -i "s/<ProductVersion>.*<\/ProductVersion>/<ProductVersion>$VERSION<\/ProductVersion>/" SixDegrees.csproj
+
+    - name: Restore dependencies
+      run: dotnet restore SixDegrees.csproj
+
+    - name: Build
+      run: dotnet build SixDegrees.csproj --configuration Release --no-restore
+
+    - name: Run tests
+      run: dotnet test SixDegrees.Tests/SixDegrees.Tests.csproj --configuration Release --no-build --verbosity normal
+
+    - name: Create release package
+      run: |
+        mkdir -p release
+        cp bin/Release/netstandard2.0/SixDegrees.dll release/
+        cp bin/Release/netstandard2.0/SixDegrees.pdb release/
+        cd release
+        zip -r ../SixDegrees-${{ steps.version.outputs.VERSION }}.zip .
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: SixDegrees-${{ steps.version.outputs.VERSION }}.zip
+        generate_release_notes: true
+        draft: false
+        prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -51,11 +51,16 @@ git commit -m "Fix typo in README +semver:skip"
 
 ## Release Process
 
+### Automated Releases via GitHub Actions
+
+This project uses GitHub Actions to automatically build and release tagged versions.
+
 ### Creating a Release
 
-1. **Ensure all changes are committed**
+1. **Ensure all changes are committed and tests pass**
    ```bash
    git status
+   dotnet test
    ```
 
 2. **Push to main branch**
@@ -63,16 +68,29 @@ git commit -m "Fix typo in README +semver:skip"
    git push origin main
    ```
 
-3. **Create and push a version tag**
+3. **Create and push a semantic version tag**
    ```bash
    git tag v1.0.0
    git push origin v1.0.0
    ```
 
-4. **GitHub Actions will:**
-   - Build the plugin with the version number
-   - Create a GitHub release
-   - Attach the compiled DLL as an artifact
+4. **GitHub Actions automatically:**
+   - Updates version numbers in the project file
+   - Builds the plugin in Release configuration
+   - Runs all unit tests
+   - Creates a release package (ZIP with DLL + PDB)
+   - Creates a GitHub release with auto-generated release notes
+   - Attaches the compiled artifacts
+   - Marks pre-releases (tags with `-alpha`, `-beta`, etc.) appropriately
+
+### Pre-release Tags
+
+Pre-release versions are automatically detected and marked:
+
+- `v1.0.0-alpha.1` → Pre-release
+- `v1.0.0-beta.2` → Pre-release
+- `v1.0.0-rc.1` → Pre-release
+- `v1.0.0` → Full release
 
 ### Pre-releases
 
