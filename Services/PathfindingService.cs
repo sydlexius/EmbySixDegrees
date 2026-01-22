@@ -305,10 +305,13 @@ namespace SixDegrees.Services
             var edges = new List<GraphEdge>();
             var visitedPeople = new HashSet<string>();
             var visitedMedia = new HashSet<string>();
+            var personDepth = new Dictionary<string, int>();
+            var mediaDepth = new Dictionary<string, int>();
             var queue = new Queue<(string PersonId, int Depth)>();
 
             queue.Enqueue((startPersonId, 0));
             visitedPeople.Add(startPersonId);
+            personDepth[startPersonId] = 0;
 
             // Add start person
             var startPerson = this.graph.GetPerson(startPersonId);
@@ -317,7 +320,8 @@ namespace SixDegrees.Services
                 Id = startPerson.Id,
                 Name = startPerson.Name,
                 Type = "person",
-                ImageUrl = startPerson.ImageUrl
+                ImageUrl = startPerson.ImageUrl,
+                Depth = 0
             });
 
             while (queue.Count > 0 && nodes.Count < maxNodes)
@@ -346,13 +350,15 @@ namespace SixDegrees.Services
                     if (!visitedMedia.Contains(mediaConnection.MediaId))
                     {
                         visitedMedia.Add(mediaConnection.MediaId);
+                        mediaDepth[mediaConnection.MediaId] = depth;
                         nodes.Add(new GraphNode
                         {
                             Id = mediaConnection.MediaId,
                             Name = mediaConnection.MediaName,
                             Type = "media",
                             MediaType = mediaConnection.MediaType,
-                            ImageUrl = mediaConnection.ImageUrl
+                            ImageUrl = mediaConnection.ImageUrl,
+                            Depth = depth
                         });
                     }
 
@@ -383,6 +389,7 @@ namespace SixDegrees.Services
                         if (!visitedPeople.Contains(nextPersonId))
                         {
                             visitedPeople.Add(nextPersonId);
+                            personDepth[nextPersonId] = depth + 1;
 
                             var nextPerson = this.graph.GetPerson(nextPersonId);
                             if (nextPerson != null)
@@ -392,7 +399,8 @@ namespace SixDegrees.Services
                                     Id = nextPerson.Id,
                                     Name = nextPerson.Name,
                                     Type = "person",
-                                    ImageUrl = nextPerson.ImageUrl
+                                    ImageUrl = nextPerson.ImageUrl,
+                                    Depth = depth + 1
                                 });
 
                                 queue.Enqueue((nextPersonId, depth + 1));

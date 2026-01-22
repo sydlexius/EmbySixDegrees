@@ -37,6 +37,11 @@ namespace SixDegrees.Models
         public string ImageUrl { get; set; }
 
         /// <summary>
+        /// Gets or sets the depth (degrees of separation from the origin node).
+        /// </summary>
+        public int? Depth { get; set; }
+
+        /// <summary>
         /// Gets or sets the connections to other nodes.
         /// </summary>
         public List<Connection> Connections { get; set; } = new List<Connection>();

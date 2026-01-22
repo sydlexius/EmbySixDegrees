@@ -293,5 +293,58 @@ public class NeighborsServiceTests
         Assert.Empty(result.Edges!);
     }
 
+    [Fact]
+    public void GetNeighbors_NodesHaveCorrectDepth()
+    {
+        // Arrange
+        this.SetupTestGraph();
+
+        // Act
+        var result = this.service.GetNeighbors("person-center", degree: 2);
+
+        // Assert
+        Assert.True(result.Success);
+
+        // Center person should have depth 0
+        var centerNode = result.Nodes!.First(n => n.Id == "person-center");
+        Assert.Equal(0, centerNode.Depth);
+
+        // First degree people (Person 1, 2, 3) should have depth 1
+        var person1 = result.Nodes!.First(n => n.Id == "person-1");
+        Assert.Equal(1, person1.Depth);
+
+        var person2 = result.Nodes!.First(n => n.Id == "person-2");
+        Assert.Equal(1, person2.Depth);
+
+        // Media connected to center should have depth 0
+        var mediaA = result.Nodes!.First(n => n.Id == "media-a");
+        Assert.Equal(0, mediaA.Depth);
+
+        // Second degree person (Person 4) should have depth 2
+        var person4 = result.Nodes!.First(n => n.Id == "person-4");
+        Assert.Equal(2, person4.Depth);
+
+        // Media C (connected through Person 1) should have depth 1
+        var mediaC = result.Nodes!.First(n => n.Id == "media-c");
+        Assert.Equal(1, mediaC.Depth);
+    }
+
+    [Fact]
+    public void GetNeighbors_DepthZero_ForStartPerson()
+    {
+        // Arrange
+        this.SetupTestGraph();
+
+        // Act
+        var result = this.service.GetNeighbors("person-center", degree: 1);
+
+        // Assert
+        Assert.True(result.Success);
+
+        var startNode = result.Nodes!.First(n => n.Id == "person-center");
+        Assert.NotNull(startNode.Depth);
+        Assert.Equal(0, startNode.Depth);
+    }
+
     #endregion
 }
