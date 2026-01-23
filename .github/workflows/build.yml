@@ -44,6 +44,12 @@ jobs:
     - name: Build
       run: dotnet build SixDegrees.csproj --configuration Release --no-restore /p:Version=${{ steps.gitversion.outputs.semVer }} /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }}
 
+    - name: Build tests
+      run: dotnet build SixDegrees.Tests/SixDegrees.Tests.csproj --configuration Release --no-restore
+
+    - name: Run tests
+      run: dotnet test SixDegrees.Tests/SixDegrees.Tests.csproj --configuration Release --no-build --verbosity normal
+
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
